@@ -1,0 +1,14 @@
+{
+  "name": "hb-trade-ui",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["apps/web", "apps/api"],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace @hb/api run dev",
+    "dev:web": "npm --workspace @hb/web run dev",
+    "build": "npm --workspace @hb/api run build && npm --workspace @hb/web run build",
+    "typecheck": "npm --workspace @hb/api run typecheck && npm --workspace @hb/web run typecheck"
+  },
+  "devDependencies": { "concurrently": "^8.2.2", "typescript": "^5.4.5" }
+}

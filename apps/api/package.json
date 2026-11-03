@@ -1,0 +1,40 @@
+{
+  "name": "@hb/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:api": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "HB_TEST=1 node --import tsx --test test/*.test.ts",
+    "migrate": "tsx src/scripts/migrate.ts all",
+    "migrate:control": "tsx src/scripts/migrate.ts control",
+    "migrate:status": "tsx src/scripts/migrate.ts all --status",
+    "migrate:fresh": "tsx src/scripts/migrate.ts all --fresh",
+    "seed": "tsx src/scripts/seed.ts",
+    "generate": "tsx src/scripts/generate.ts",
+    "bench": "tsx src/scripts/bench.ts",
+    "db:reset": "tsx src/scripts/migrate.ts all --fresh && tsx src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.12.7",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}

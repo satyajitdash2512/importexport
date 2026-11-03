@@ -1,0 +1,66 @@
+# HB Trade — full stack: MySQL 8, the API, and the web app.
+#
+#   docker compose up --build
+#   docker compose run --rm api npm run db:reset     # migrate + seed
+#   open http://localhost:5173
+#
+# The db service loads the same tuning file (deploy/hb-tuning.cnf) used to build
+# and benchmark the module. The api service waits for MySQL to be healthy, then
+# runs migrations and the demo seed on first boot.
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    command: --local-infile=1 --innodb-flush-log-at-trx-commit=2 --sync-binlog=0 --innodb-buffer-pool-size=1G
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpw
+      # the control DB; tenant databases (hb_tenant_*) are created by the migrator
+      MYSQL_DATABASE: hb_control
+      MYSQL_USER: hb_app
+      MYSQL_PASSWORD: hb_app_pw
+    ports:
+      - '3307:3306'
+    volumes:
+      - hb_db_data:/var/lib/mysql
+      - ./deploy/hb-tuning.cnf:/etc/mysql/conf.d/hb-tuning.cnf:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-prootpw']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: on-failure
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DB_HOST: db
+      DB_PORT: '3306'
+      DB_NAME: hb_trade
+      DB_USER: hb_app
+      DB_PASSWORD: hb_app_pw
+      DB_ADMIN_USER: root
+      DB_ADMIN_PASSWORD: rootpw
+      JWT_SECRET: change-me-in-prod-access
+      JWT_REFRESH_SECRET: change-me-in-prod-refresh
+      PORT: '4000'
+    ports:
+      - '4000:4000'
+    # provision hb_control + every tenant DB, migrate, seed, then start the API
+    command: sh -c "npm run migrate && npm run seed && npm run dev:api"
+
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    restart: on-failure
+    depends_on: [api]
+    environment:
+      # the web dev server proxies /api to this target
+      API_PROXY_TARGET: http://api:4000
+    ports:
+      - '5173:5173'
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+
+volumes:
+  hb_db_data:
